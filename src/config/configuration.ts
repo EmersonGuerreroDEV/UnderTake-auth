@@ -1,8 +1,6 @@
 export const EnvConfiguration = () => ({
-  database: {
-    host: '82.197.82.49',
-    username: 'u878370420_undertake',
-    password: 'Berasflow21#',
-    database: 'u878370420_undertake',
-  },
+  host: process.env.DB_HOST || 'localhost',
+  database: process.env.DB_NAME || 'u878370420_undertake',
+  username: process.env.DB_USER || 'u878370420_undertake',
+  password: process.env.PASSWORD || 'Berasflow21#',
 });
