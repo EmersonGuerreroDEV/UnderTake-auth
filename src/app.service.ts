@@ -10,6 +10,7 @@ import { CreateAuthDto } from './dto/create-auth.dto';
 import * as bcrypt from 'bcrypt';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { Repository } from 'typeorm';
+import { UpdateUserDto } from './dto/update-user.dto';
 @Injectable()
 export class UserService {
   constructor(
@@ -65,5 +66,43 @@ export class UserService {
 
   async getAll() {
     return [];
+  }
+  // Actualizar un usuario
+  async update(id: string, updateAuthDto: UpdateUserDto): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Si el password está presente, lo ciframos
+    if (updateAuthDto.password) {
+      updateAuthDto.password = await bcrypt.hash(updateAuthDto.password, 10);
+    }
+
+    // Usamos Object.assign para actualizar el objeto
+    Object.assign(user, updateAuthDto);
+
+    return await this.userRepository.save(user); // Guarda el usuario actualizado
+  }
+
+
+  // Obtener todos los usuarios
+  async findAll(): Promise<User[]> {
+    return this.userRepository.find({
+    });
+  }
+
+  // Obtener un solo usuario por ID
+  async findOne(id: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id }
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
   }
 }
