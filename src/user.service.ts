@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  BadGatewayException
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,6 +12,8 @@ import * as bcrypt from 'bcrypt';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { Repository } from 'typeorm';
 import { UpdateUserDto } from './dto/update-user.dto';
+
+
 @Injectable()
 export class UserService {
   constructor(
@@ -18,13 +21,12 @@ export class UserService {
     private jwtService: JwtService,
   ) { }
 
-  async create(createAuthDto: CreateAuthDto): Promise<User> {
+  async createUser(createAuthDto: CreateAuthDto): Promise<User> {
     const existingUser = await this.userRepository.findOne({
       where: { email: createAuthDto.email },
     });
 
     if (existingUser) {
-      // Si el correo electrónico ya está en uso, devuelve un mensaje de error
       throw new BadRequestException('El correo electrónico ya está en uso.');
     }
 
@@ -35,7 +37,8 @@ export class UserService {
     return await this.userRepository.save(user);
   }
 
-  async login(loginAuthDto: LoginAuthDto) {
+
+  async loginUser(loginAuthDto: LoginAuthDto) {
     try {
       const { email, password } = loginAuthDto;
 
