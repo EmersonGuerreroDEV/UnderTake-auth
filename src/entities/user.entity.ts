@@ -1,8 +1,9 @@
 import {
-    Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn
+    Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany
 } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRoles, UserStatus } from '../common/utils/enums';
+import { Address } from './address.entity';
 
 @Entity('users') // Nombre de la tabla en la base de datos
 export class User {
@@ -36,7 +37,6 @@ export class User {
     @Column({ type: 'varchar', length: 20, nullable: true })
     phone: string;
 
-
     @Column({ type: 'varchar', length: 255, default: uuidv4() })
     code: string;
 
@@ -49,17 +49,8 @@ export class User {
     @Column({ type: 'varchar', length: 255, nullable: true })
     securityToken: string;
 
-    @Column({ type: 'json', nullable: true })
-    sendAddress: {
-        department: string;
-        address: string;
-        city: string;
-        neighborhood: string;
-        reference: string;
-    };
-
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    reference: string;
+    @OneToMany(() => Address, (address) => address.user)
+    addresses: Address[];
 
     @CreateDateColumn({ type: 'timestamp' })
     createdAt: Date;

@@ -36,7 +36,7 @@ export class AuthGuard implements CanActivate {
       if (payload.sub) {
         user = await this.userRepository
           .createQueryBuilder('user')
-          .select(['user.email', 'user.fullName', 'user.role', 'user.code', 'user.id', 'user.sendAddress']) // Selecciona solo los campos necesarios
+          .select(['user.email', 'user.fullName', 'user.role', 'user.code', 'user.id', 'user.addresses']) // Selecciona solo los campos necesarios
           .where('user.id = :id', { id: payload.sub })
           .getOne();
 
