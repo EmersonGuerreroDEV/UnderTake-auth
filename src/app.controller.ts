@@ -28,8 +28,8 @@ export class AppController {
   }
 
   // Actualizar un usuario
-  @Roles(UserRoles.USER)
-  @UseGuards(AuthGuard, RolesGuard)
+  // @Roles(UserRoles.USER)
+  // @UseGuards(AuthGuard, RolesGuard)
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateAuthDto: UpdateUserDto) {
     return this.userService.update(id, updateAuthDto);
@@ -44,10 +44,9 @@ export class AppController {
   }
 
   // Obtener un solo usuario por su ID
-  @Roles(UserRoles.USER)
-  @UseGuards(AuthGuard, RolesGuard)
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.userService.findOne(id);
+  @UseGuards(AuthGuard)
+  @MessagePattern({ cmd: 'detail_user' })
+  async findOne(data: any) {
+    return this.userService.findOne(data);
   }
 }

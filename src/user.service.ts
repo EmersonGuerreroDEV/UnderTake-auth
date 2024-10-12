@@ -12,6 +12,7 @@ import * as bcrypt from 'bcrypt';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { Repository } from 'typeorm';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserInterface, UserMiddlewareInterface } from './interfaces/user.interface';
 
 
 @Injectable()
@@ -45,6 +46,7 @@ export class UserService {
       const user = await this.userRepository.findOne({
         where: { email },
       });
+
 
       if (!user) {
         throw new NotFoundException('User not found');
@@ -97,15 +99,30 @@ export class UserService {
   }
 
   // Obtener un solo usuario por ID
-  async findOne(id: string): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { id }
-    });
+  async findOne(user: UserMiddlewareInterface): Promise<User> {
 
-    if (!user) {
-      throw new NotFoundException('User not found');
+    try {
+      
+      if (user?.user?.id) {
+        const id = user?.user?.id
+        const userDetails = await this.userRepository.findOne({
+          where: { id }
+        });
+        delete userDetails.password
+
+        if (!userDetails) {
+          throw new NotFoundException('User not found');
+        }
+        console.log(userDetails)
+        return userDetails;
+      } else {
+        console.log("Hola")
+        return null
+      }
+
+    } catch (error) {
+      console.log(error)
     }
 
-    return user;
   }
 }

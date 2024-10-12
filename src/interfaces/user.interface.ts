@@ -1,8 +1,14 @@
 import { UserRoles, UserStatus } from "src/common/utils/enums";
 
+
+export interface UserMiddlewareInterface {
+    user: UserInterface,
+    he
+}
+
 export interface UserInterface {
     id?: string
-  
+
 
     fullName: string;
 
@@ -21,6 +27,7 @@ export interface UserInterface {
     questions: object[];
 
     phone: string
+
 
 
     code: string
@@ -42,3 +49,5 @@ export interface UserInterface {
 
     reference: string
 }
+
+
