@@ -8,6 +8,7 @@ import { UserRoles } from './common/utils/enums';
 import { RolesGuard } from './role.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { MessagePattern } from '@nestjs/microservices';
+import { addAddressDto } from './dto/add-address.dto';
 
 
 
@@ -28,12 +29,37 @@ export class AppController {
   }
 
   // Actualizar un usuario
-  @Roles(UserRoles.USER)
-  @UseGuards(AuthGuard, RolesGuard)
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateAuthDto: UpdateUserDto) {
-    return this.userService.update(id, updateAuthDto);
+  // @Roles(UserRoles.USER)
+  // @UseGuards(AuthGuard, RolesGuard)
+  @MessagePattern({ cmd: 'update_user' })
+  @UseGuards(AuthGuard)
+  async update(data: any) {
+    const id = data?.user?.id
+    const body: UpdateUserDto = data?.body
+    return this.userService.update(id, body);
   }
+
+  @MessagePattern({ cmd: 'add_address_user' })
+  @UseGuards(AuthGuard)
+  async addAddress(
+    data: any
+  ) {
+
+    const info: addAddressDto = { address: data.address, cityId: data.city }
+    const userId = data.user.id
+    return this.userService.addAddressToUser(userId, info);
+  }
+
+
+  @MessagePattern({ cmd: 'list_cities_user' })
+  async listCities(
+    data: any
+  ) {
+
+
+    return this.userService.citiesList();
+  }
+
 
   // Listar todos los usuarios
   @Roles(UserRoles.USER)
@@ -44,10 +70,9 @@ export class AppController {
   }
 
   // Obtener un solo usuario por su ID
-  @Roles(UserRoles.USER)
-  @UseGuards(AuthGuard, RolesGuard)
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.userService.findOne(id);
+  @UseGuards(AuthGuard)
+  @MessagePattern({ cmd: 'detail_user' })
+  async findOne(data: any) {
+    return this.userService.findOne(data);
   }
 }

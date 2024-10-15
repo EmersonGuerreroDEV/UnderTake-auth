@@ -12,12 +12,20 @@ import * as bcrypt from 'bcrypt';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { Repository } from 'typeorm';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserInterface, UserMiddlewareInterface } from './interfaces/user.interface';
+import { City } from './entities/city.entity';
+import { Address } from './entities/address.entity';
 
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
+
+    @InjectRepository(City) private cityRepository: Repository<City>,
+
+    @InjectRepository(Address) private addressRepository: Repository<Address>,
+
     private jwtService: JwtService,
   ) { }
 
@@ -46,6 +54,7 @@ export class UserService {
         where: { email },
       });
 
+
       if (!user) {
         throw new NotFoundException('User not found');
       }
@@ -72,6 +81,7 @@ export class UserService {
   }
   // Actualizar un usuario
   async update(id: string, updateAuthDto: UpdateUserDto): Promise<User> {
+
     const user = await this.userRepository.findOne({ where: { id } });
 
     if (!user) {
@@ -89,6 +99,10 @@ export class UserService {
     return await this.userRepository.save(user); // Guarda el usuario actualizado
   }
 
+  async citiesList() {
+    return this.cityRepository.find()
+  }
+
 
   // Obtener todos los usuarios
   async findAll(): Promise<User[]> {
@@ -97,15 +111,60 @@ export class UserService {
   }
 
   // Obtener un solo usuario por ID
-  async findOne(id: string): Promise<User> {
+  async findOne(user: UserMiddlewareInterface): Promise<User> {
+
+    try {
+
+      if (user?.user?.id) {
+        const id = user?.user?.id
+        const userDetails = await this.userRepository.findOne({
+          where: { id },
+          relations: ['addresses', 'addresses.city']
+        });
+        delete userDetails.password
+
+        if (!userDetails) {
+          throw new NotFoundException('User not found');
+        }
+        console.log(userDetails)
+        return userDetails;
+      } else {
+        console.log("Hola")
+        return null
+      }
+
+    } catch (error) {
+      console.log(error)
+    }
+
+  }
+
+
+  async addAddressToUser(userId: string, addressData: { address: string, cityId: string }): Promise<User> {
     const user = await this.userRepository.findOne({
-      where: { id }
+      where: { id: userId },
+      relations: ['addresses'],
     });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    return user;
+    const city = await this.cityRepository.findOne({ where: { id: addressData.cityId } });
+    if (!city) {
+      throw new NotFoundException(`City with id ${addressData.cityId} not found`);
+    }
+
+    const newAddress = this.addressRepository.create({
+      address: addressData.address,
+      city: city,
+      user: user,
+    });
+
+    await this.addressRepository.save(newAddress);
+
+    user.addresses.push(newAddress); // Agrega la nueva dirección a las existentes
+    return this.userRepository.save(user);
   }
+
 }

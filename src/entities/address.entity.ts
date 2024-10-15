@@ -12,6 +12,12 @@ export class Address {
     @Column({ type: 'varchar', length: 255, nullable: false })
     address: string;
 
+    @Column({})
+    postalCode: string;
+
+    @Column({})
+    neighborhood: string
+
     @ManyToOne(() => City, (city) => city.addresses, { nullable: false })
     city: City;
 
