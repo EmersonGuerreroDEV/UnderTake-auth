@@ -75,4 +75,12 @@ export class AppController {
   async findOne(data: any) {
     return this.userService.findOne(data);
   }
+
+
+  @MessagePattern({ cmd: 'validate_token' })
+  async validateToken(data: { token: string }) {
+    return this.userService.validateToken(data.token);
+  }
+
+
 }

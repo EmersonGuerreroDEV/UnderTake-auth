@@ -2,7 +2,8 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-  BadGatewayException
+  BadGatewayException,
+  UnauthorizedException
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,6 +16,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UserInterface, UserMiddlewareInterface } from './interfaces/user.interface';
 import { City } from './entities/city.entity';
 import { Address } from './entities/address.entity';
+import { jwtConstants } from './common/utils/constans';
 
 
 @Injectable()
@@ -165,6 +167,21 @@ export class UserService {
 
     user.addresses.push(newAddress); // Agrega la nueva dirección a las existentes
     return this.userRepository.save(user);
+  }
+
+
+  async validateToken(token: any): Promise<any> {
+    try {
+
+      console.log(token, "ESTE ES EL TOKEN");
+
+      const payload = await this.jwtService.verifyAsync(token.token, {
+        secret: jwtConstants.secret,
+      });
+      return payload; // Retorna los datos del token si es válido
+    } catch (e) {
+      throw new UnauthorizedException('Invalid token');
+    }
   }
 
 }
