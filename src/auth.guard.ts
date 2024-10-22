@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { jwtConstants } from './common/utils/constans';
-import { Request } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';  // Asegúrate de que sea la entidad de TypeORM
 import { UserInterface } from './interfaces/user.interface';
+import { RpcException } from '@nestjs/microservices'; // Importar RpcException para microservicios
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -21,38 +21,62 @@ export class AuthGuard implements CanActivate {
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
+    // Cambiar a RpcContext
+    const ctx = context.switchToRpc();
+    const data = ctx.getData();
+
+    // Supongamos que estás pasando el token en los headers del mensaje
+    const token = this.extractTokenFromData(data);
+
+
     if (!token) {
-      throw new UnauthorizedException();
+      throw new RpcException('Unauthorized');
     }
+
+
     try {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: jwtConstants.secret,
       });
+
 
       // Obtener el usuario de la base de datos usando TypeORM
       let user: UserInterface;
       if (payload.sub) {
         user = await this.userRepository
           .createQueryBuilder('user')
-          .select(['user.email', 'user.fullName', 'user.role', 'user.code', 'user.id', 'user.sendAddress']) // Selecciona solo los campos necesarios
+          .select([
+            'user.email',
+            'user.fullName',
+            'user.role',
+            'user.code',
+            'user.id',
+            'address.address', // Agrega el campo address de la dirección
+            'city.id', // Agrega el ID de la ciudad
+            'city.name']) // Selecciona solo los campos necesarios
+          .leftJoin('user.addresses', 'address') // Realiza un left join con las direcciones
+          .leftJoin('address.city', 'city')
           .where('user.id = :id', { id: payload.sub })
           .getOne();
 
+
         if (!user) {
-          throw new UnauthorizedException();
+          throw new RpcException('Unauthorized');
         }
       }
-      request['user'] = user;
-    } catch {
-      throw new UnauthorizedException();
+      // Inyectar el usuario en el contexto para usarlo después
+      data.user = { ...user };
+    } catch (error) {
+      console.log(error)
+      throw new RpcException('Unauthorized');
     }
     return true;
   }
 
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+  // Extraer el token desde los headers o el mensaje RPC
+  private extractTokenFromData(data: any): string | undefined {
+    const headers = data.headers || {};
+    const [type, token] = headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
   }
 }

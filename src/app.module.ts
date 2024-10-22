@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
-import { UserService } from './app.service';
+import { UserService } from './user.service';
 import { User } from './entities/user.entity';
 import { PassportModule } from '@nestjs/passport';
 import { jwtConstants } from './common/utils/constans';
 import { JwtModule } from '@nestjs/jwt';
 import { EnvConfiguration } from './config/configuration';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { City } from './entities/city.entity';
+import { Address } from './entities/address.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -31,13 +33,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         database: configService.get<string>('database'),
         // Si usas una URL en lugar de los campos separados:
         // url: configService.get<string>('database.url'),
-        entities: [User], // Define tus entidades aquí
+        entities: [User, City, Address], // Define tus entidades aquí
         synchronize: true, // Solo para desarrollo, desactívalo en producción
       }),
     }),
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, City, Address]),
   ],
   controllers: [AppController],
   providers: [UserService, JwtModule],
 })
-export class AppModule {}
+export class AppModule { }

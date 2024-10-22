@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
-import { UserService } from './app.service';
+import { UserService } from './user.service';
 
 describe('AppController', () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

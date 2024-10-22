@@ -1,8 +1,14 @@
 import { UserRoles, UserStatus } from "src/common/utils/enums";
 
+
+export interface UserMiddlewareInterface {
+    user: UserInterface,
+
+}
+
 export interface UserInterface {
     id?: string
-  
+
 
     fullName: string;
 
@@ -23,6 +29,7 @@ export interface UserInterface {
     phone: string
 
 
+
     code: string
 
 
@@ -32,13 +39,13 @@ export interface UserInterface {
 
     securityToken: string;
 
-    sendAddress: {
-        address: string;
-        city: string,
-        neighborhood: string;
-        reference: string;
-        department: string,
-    };
+    addresses: {
+        id: string; // ID de la dirección
+        address: string; // Dirección
+        city: { // Relación con la ciudad
+            id: string;
+            name: string;
+        };
+    }[];
 
-    reference: string
 }
