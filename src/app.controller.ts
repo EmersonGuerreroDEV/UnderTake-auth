@@ -28,6 +28,12 @@ export class AppController {
     return this.userService.loginUser(loginAuthDto);
   }
 
+
+  @MessagePattern({ cmd: 'list_user' })
+  userList() {
+    return this.userService.getAll();
+  }
+
   // Actualizar un usuario
   // @Roles(UserRoles.USER)
   // @UseGuards(AuthGuard, RolesGuard)
@@ -38,6 +44,17 @@ export class AppController {
     const body: UpdateUserDto = data?.body
     return this.userService.update(id, body);
   }
+
+
+  @MessagePattern({ cmd: 'update_id_user' })
+  @UseGuards(AuthGuard)
+  async updateId(data: any) {
+    const id = data?.userId
+    const body: UpdateUserDto = data?.body
+    return this.userService.update(id, body);
+  }
+
+
 
   @MessagePattern({ cmd: 'add_address_user' })
   @UseGuards(AuthGuard)
@@ -73,6 +90,13 @@ export class AppController {
   @UseGuards(AuthGuard)
   @MessagePattern({ cmd: 'detail_user' })
   async findOne(data: any) {
+    return this.userService.findOne(data);
+  }
+
+
+
+  @MessagePattern({ cmd: 'detail_admin_user' })
+  async findUsaerAdmin(data: any) {
     return this.userService.findOne(data);
   }
 

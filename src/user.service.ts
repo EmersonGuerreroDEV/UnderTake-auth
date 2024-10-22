@@ -79,7 +79,7 @@ export class UserService {
   }
 
   async getAll() {
-    return [];
+    return await this.userRepository.find();
   }
   // Actualizar un usuario
   async update(id: string, updateAuthDto: UpdateUserDto): Promise<User> {
@@ -101,6 +101,7 @@ export class UserService {
     return await this.userRepository.save(user); // Guarda el usuario actualizado
   }
 
+
   async citiesList() {
     return this.cityRepository.find()
   }
@@ -116,7 +117,7 @@ export class UserService {
   async findOne(user: UserMiddlewareInterface): Promise<User> {
 
     try {
-
+      console.log(user.user)
       if (user?.user?.id) {
         const id = user?.user?.id
         const userDetails = await this.userRepository.findOne({
