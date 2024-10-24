@@ -4,8 +4,8 @@ import * as dotenv from 'dotenv';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 
+dotenv.config();
 async function bootstrap() {
-  dotenv.config();
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
     transport: Transport.TCP,
     options: { port: 3010 }, // Asegúrate de que el puerto coincida
