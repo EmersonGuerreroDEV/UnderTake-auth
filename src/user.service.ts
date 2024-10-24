@@ -2,7 +2,8 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-  BadGatewayException
+  BadGatewayException,
+  UnauthorizedException
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,12 +14,20 @@ import { LoginAuthDto } from './dto/login-auth.dto';
 import { Repository } from 'typeorm';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserInterface, UserMiddlewareInterface } from './interfaces/user.interface';
+import { City } from './entities/city.entity';
+import { Address } from './entities/address.entity';
+import { jwtConstants } from './common/utils/constans';
 
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
+
+    @InjectRepository(City) private cityRepository: Repository<City>,
+
+    @InjectRepository(Address) private addressRepository: Repository<Address>,
+
     private jwtService: JwtService,
   ) { }
 
@@ -70,10 +79,11 @@ export class UserService {
   }
 
   async getAll() {
-    return [];
+    return await this.userRepository.find();
   }
   // Actualizar un usuario
   async update(id: string, updateAuthDto: UpdateUserDto): Promise<User> {
+
     const user = await this.userRepository.findOne({ where: { id } });
 
     if (!user) {
@@ -92,6 +102,11 @@ export class UserService {
   }
 
 
+  async citiesList() {
+    return this.cityRepository.find()
+  }
+
+
   // Obtener todos los usuarios
   async findAll(): Promise<User[]> {
     return this.userRepository.find({
@@ -102,11 +117,12 @@ export class UserService {
   async findOne(user: UserMiddlewareInterface): Promise<User> {
 
     try {
-      
+      console.log(user.user)
       if (user?.user?.id) {
         const id = user?.user?.id
         const userDetails = await this.userRepository.findOne({
-          where: { id }
+          where: { id },
+          relations: ['addresses', 'addresses.city']
         });
         delete userDetails.password
 
@@ -125,4 +141,48 @@ export class UserService {
     }
 
   }
+
+
+  async addAddressToUser(userId: string, addressData: { address: string, cityId: string }): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['addresses'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const city = await this.cityRepository.findOne({ where: { id: addressData.cityId } });
+    if (!city) {
+      throw new NotFoundException(`City with id ${addressData.cityId} not found`);
+    }
+
+    const newAddress = this.addressRepository.create({
+      address: addressData.address,
+      city: city,
+      user: user,
+    });
+
+    await this.addressRepository.save(newAddress);
+
+    user.addresses.push(newAddress); // Agrega la nueva dirección a las existentes
+    return this.userRepository.save(user);
+  }
+
+
+  async validateToken(token: any): Promise<any> {
+    try {
+
+      console.log(token, "ESTE ES EL TOKEN");
+
+      const payload = await this.jwtService.verifyAsync(token.token, {
+        secret: jwtConstants.secret,
+      });
+      return payload; // Retorna los datos del token si es válido
+    } catch (e) {
+      throw new UnauthorizedException('Invalid token');
+    }
+  }
+
 }

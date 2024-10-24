@@ -38,14 +38,24 @@ export class AuthGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: jwtConstants.secret,
       });
-      console.log(payload)
+
 
       // Obtener el usuario de la base de datos usando TypeORM
       let user: UserInterface;
       if (payload.sub) {
         user = await this.userRepository
           .createQueryBuilder('user')
-          .select(['user.email', 'user.fullName', 'user.role', 'user.code', 'user.id', 'user.sendAddress']) // Selecciona solo los campos necesarios
+          .select([
+            'user.email',
+            'user.fullName',
+            'user.role',
+            'user.code',
+            'user.id',
+            'address.address', // Agrega el campo address de la dirección
+            'city.id', // Agrega el ID de la ciudad
+            'city.name']) // Selecciona solo los campos necesarios
+          .leftJoin('user.addresses', 'address') // Realiza un left join con las direcciones
+          .leftJoin('address.city', 'city')
           .where('user.id = :id', { id: payload.sub })
           .getOne();
 
